@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoreYeahs AI Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .chat-container {
+            flex: 1;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            background: #4ade80;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            min-height: 400px;
+            max-height: 60vh;
+        }
+
+        .message {
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .user-bubble {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 20px 20px 5px 20px;
+            max-width: 80%;
+            box-shadow: 0 3px 10px rgba(240, 147, 251, 0.3);
+        }
+
+        .assistant-message {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .assistant-bubble {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 20px 20px 20px 5px;
+            max-width: 80%;
+            box-shadow: 0 3px 10px rgba(79, 172, 254, 0.3);
+        }
+
+        .message-indicator {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+            font-weight: 500;
+        }
+
+        .company-indicator {
+            background: rgba(17, 153, 142, 0.2);
+            color: #0f766e;
+        }
+
+        .general-indicator {
+            background: rgba(102, 126, 234, 0.2);
+            color: #4338ca;
+        }
+
+        .file-indicator {
+            background: rgba(255, 154, 158, 0.2);
+            color: #dc2626;
+        }
+
+        .image-indicator {
+            background: rgba(139, 92, 246, 0.2);
+            color: #7c3aed;
+        }
+
+        .file-attachment {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .message-image {
+            max-width: 200px;
+            max-height: 150px;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .input-container {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 1.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            padding: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .message-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            background: transparent;
+            font-family: inherit;
+        }
+
+        .message-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            margin-right: 0.5rem;
+        }
+
+        .file-input {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+        }
+
+        .file-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .file-label:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(255, 154, 158, 0.4);
+        }
+
+        .send-button {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .file-preview {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .file-preview.show {
+            display: block;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 1.5rem;
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            color: #1e293b;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .control-button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: #64748b;
+            padding: 2rem;
+            border: 2px dashed #e2e8f0;
+            border-radius: 15px;
+            margin: 1rem 0;
+        }
+
+        .welcome-message i {
+            font-size: 3rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+                padding: 0.5rem;
+            }
+            
+            .sidebar {
+                width: 100%;
+                order: -1;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .user-bubble, .assistant-bubble {
+                max-width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-robot"></i> MoreYeahs AI Assistant</h1>
+        <p>Your intelligent companion for all inquiries</p>
+    </div>
+
+    <div class="main-container">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="status-indicator"></div>
+                <span>AI Assistant - <span id="status-text">Ready</span></span>
+            </div>
+
+            <div class="messages-container" id="messages">
+                <div class="welcome-message">
+                    <i class="fas fa-comments"></i>
+                    <h3>Welcome to MoreYeahs AI Assistant!</h3>
+                    <p>Ask me anything !</p>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <div class="file-preview" id="filePreview"></div>
+                <form id="chatForm" enctype="multipart/form-data">
+                    <div class="input-wrapper">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="fileInput" class="file-input" accept=".jpg,.jpeg,.png,.gif,.bmp,.pdf,.docx,.txt">
+                            <label for="fileInput" class="file-label" title="Upload file">
+                                <i class="fas fa-paperclip"></i>
+                            </label>
+                        </div>
+                        <input type="text" id="messageInput" class="message-input" placeholder="Type your message and press Enter..." autocomplete="off" required>
+                        <button type="submit" class="send-button" id="sendButton" title="Send message">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h3><i class="fas fa-cog"></i> Chat Controls</h3>
+            <button class="control-button" onclick="clearChat()">
+                <i class="fas fa-trash"></i> Clear Chat History
+            </button>
+            <button class="control-button" onclick="refreshKnowledge()">
+                <i class="fas fa-refresh"></i> Refresh Knowledge
+            </button>
+
+           
+        </div>
+    </div>
+
+    <script>
+        let isInitialized = false;
+        let currentFile = null;
+
+        // Initialize the app
+        async function initialize() {
+            if (isInitialized) return;
+            
+            try {
+                document.getElementById('status-text').textContent = 'Initializing...';
+                const response = await fetch('/initialize', { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('status-text').textContent = 'Ready';
+                    isInitialized = true;
+                } else {
+                    document.getElementById('status-text').textContent = 'Ready (Limited)';
+                }
+            } catch (error) {
+                document.getElementById('status-text').textContent = 'Ready (Offline)';
+                console.error('Initialization error:', error);
+            }
+        }
+
+        // File handling
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                currentFile = file;
+                showFilePreview(file);
+            }
+        });
+
+        // Show file preview
+        function showFilePreview(file) {
+            const preview = document.getElementById('filePreview');
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            
+            preview.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fas fa-file" style="color: #667eea;"></i>
+                    <div>
+                        <strong>${file.name}</strong>
+                        <div style="font-size: 0.8rem; color: #64748b;">${fileSize} MB</div>
+                    </div>
+                    <button type="button" onclick="clearFilePreview()" style="margin-left: auto; background: none; border: none; color: #64748b; cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            preview.classList.add('show');
+        }
+
+        // Clear file preview
+        function clearFilePreview() {
+            const preview = document.getElementById('filePreview');
+            preview.classList.remove('show');
+            preview.innerHTML = '';
+            currentFile = null;
+            document.getElementById('fileInput').value = '';
+        }
+
+        // Add message to chat
+        function addMessage(message) {
+            const messagesContainer = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+
+            if (message.role === 'user') {
+                messageDiv.innerHTML = `
+                    <div class="user-message">
+                        <div class="user-bubble">
+                            ${message.content}
+                            ${message.file_name ? `<div class="file-attachment">
+                                <i class="fas fa-file"></i>
+                                <span>${message.file_name}</span>
+                            </div>` : ''}
+                            ${message.file_data_url ? `<img src="${message.file_data_url}" class="message-image" alt="Uploaded image">` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                const indicator = getIndicator(message.type);
+                messageDiv.innerHTML = `
+                    <div class="assistant-message">
+                        <div class="assistant-bubble">
+                            <div class="message-indicator ${indicator.class}">${indicator.text}</div>
+                            ${message.content}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Remove welcome message if exists
+            const welcomeMsg = messagesContainer.querySelector('.welcome-message');
+            if (welcomeMsg) {
+                welcomeMsg.remove();
+            }
+
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Get indicator for message type
+        function getIndicator(type) {
+            switch(type) {
+                case 'company':
+                    return { class: 'company-indicator', text: '' };
+                case 'image':
+                    return { class: 'image-indicator', text: '' };
+                case 'file':
+                    return { class: 'file-indicator', text: '' };
+                case 'general':
+                default:
+                    return { class: 'general-indicator', text: '' };
+            }
+        }
+
+        // Show loading message
+        function showLoading() {
+            const messagesContainer = document.getElementById('messages');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message loading-message';
+            loadingDiv.innerHTML = `
+                <div class="assistant-message">
+                    <div class="assistant-bubble">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>Thinking...</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(loadingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            return loadingDiv;
+        }
+
+        // Handle form submission
+        document.getElementById('chatForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+
+            // Disable input and button
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+
+            try {
+                // Create FormData
+                const formData = new FormData();
+                formData.append('message', message);
+                
+                if (currentFile) {
+                    formData.append('file', currentFile);
+                }
+
+                // Show loading
+                const loadingDiv = showLoading();
+
+                // Send request
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // Remove loading
+                loadingDiv.remove();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Add messages to chat
+                    addMessage(data.user_message);
+                    addMessage(data.assistant_message);
+                    
+                    // Clear form
+                    messageInput.value = '';
+                    clearFilePreview();
+                } else {
+                    const error = await response.json();
+                    addMessage({
+                        role: 'assistant',
+                        content: `Error: ${error.error || 'Something went wrong'}`,
+                        type: 'error'
+                    });
+                }
+            } catch (error) {
+                // Remove loading if still there
+                const loadingDiv = document.querySelector('.loading-message');
+                if (loadingDiv) loadingDiv.remove();
+                
+                addMessage({
+                    role: 'assistant',
+                    content: `Error: ${error.message}`,
+                    type: 'error'
+                });
+            } finally {
+                // Re-enable input and button
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        });
+
+        // Clear chat function
+        async function clearChat() {
+            try {
+                const response = await fetch('/clear', { method: 'POST' });
+                if (response.ok) {
+                    const messagesContainer = document.getElementById('messages');
+                    messagesContainer.innerHTML = `
+                        <div class="welcome-message">
+                            <i class="fas fa-comments"></i>
+                            <h3>Welcome to MoreYeahs AI Assistant!</h3>
+                            <p>Ask me anything !</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error clearing chat:', error);
+            }
+        }
+
+        // Refresh knowledge function
+        async function refreshKnowledge() {
+            try {
+                document.getElementById('status-text').textContent = 'Refreshing...';
+                const response = await fetch('/refresh', { method: 'POST' });
+                if (response.ok) {
+                    isInitialized = false;
+                    await initialize();
+                }
+            } catch (error) {
+                console.error('Error refreshing knowledge:', error);
+                document.getElementById('status-text').textContent = 'Error';
+            }
+        }
+
+        // Drag and drop functionality
+        const chatContainer = document.querySelector('.chat-container');
+        
+        chatContainer.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            chatContainer.style.backgroundColor = '#f0f9ff';
+        });
+
+        chatContainer.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            chatContainer.style.backgroundColor = '';
+        });
+
+        chatContainer.addEventListener('drop', function(e) {
+            e.preventDefault();
+            chatContainer.style.backgroundColor = '';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const file = files[0];
+                currentFile = file;
+                showFilePreview(file);
+                
+                // Set the file to the input
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                document.getElementById('fileInput').files = dataTransfer.files;
+            }
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initialize();
+            document.getElementById('messageInput').focus();
+        });
+
+        // Auto-resize text input (if needed for multiline)
+        document.getElementById('messageInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    </script>
+</body>
+</html>
